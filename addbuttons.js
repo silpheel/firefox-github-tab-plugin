@@ -129,10 +129,7 @@ function addTopRightButtons() {
 }
 
 function startObserver() {
-    const obs = new MutationObserver(() => {
-        addTabs();
-        addTopRightButtons();
-    });
+    const obs = new MutationObserver(() => addTabs());
     obs.observe(document.documentElement, { childList: true, subtree: true });
     addTabs();
     addTopRightButtons();
