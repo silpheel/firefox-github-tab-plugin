@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "GitHub shortcuts",
+    "version": "1.2",
+    "description": "Add some shortcuts to GitHub pages.",
+    "host_permissions": ["*://github.com/*", "*://*.github.com/*"],
+    "content_scripts": [
+        {
+            "matches": ["*://github.com/*", "*://*.github.com/*"],
+            "js": ["addbuttons.js"],
+            "run_at": "document_idle"
+        }
+    ],
+    "icons": {
+        "128": "icon.svg"
+    }
+}

@@ -8,9 +8,7 @@ function createElementFromHTML(htmlString) {
 
 function generateTab(label, name, url, shortcut = '', index=0)
 {
-    const convertedName = name.replace(' ', '-');
-    // without the data-turbo-frame, the loads are no longer pjax and so a full page reload occurs
-    // the underline appears when the tab has `class=current` or `aria-current=page`
+    const convertedName = name.replace(/\s+/g, '-');
     return createElementFromHTML(
         `
 <li data-view-component="true" class="d-inline-flex">
@@ -35,7 +33,7 @@ function generateTab(label, name, url, shortcut = '', index=0)
 }
 
 function generateButton(label, name, url, shortcut, index) {
-    const convertedName = name.replace(' ', '-');
+    const convertedName = name.replace(/\s+/g, '-');
     return createElementFromHTML(
         `
 <a href="${url}" class="btn btn-primary" role="button" data-hotkey="${shortcut}" id="${convertedName}${gitHubButtonSuffix}">
@@ -48,32 +46,96 @@ function generateButton(label, name, url, shortcut, index) {
 
 function buildUrl(url)
 {
-    return window.location.pathname.replace(/(\/[^\/]+\/[^\/]+)\/?.*/g, "$1") + url;
+    const m = window.location.pathname.match(/^\/(?:[^\/]+)\/(?:[^\/]+)/);
+    if (!m) {
+        return url
+    }
+    return m[0] + url;
 }
 
-function appendElement(nav, label, url, generatorFunction, name = undefined, index=0, shortcut='')
-{
-    let codename = name;
-    if (!name) {
-        codename = label.toLowerCase();
+function appendElement(navEl, label, url, generatorFunction, name = undefined, index = 0, shortcut = '') {
+    const codename = name || label.toLowerCase();
+    const convertedName = codename.replace(/\s+/g, '-');
+    const id = `${convertedName}${gitHubButtonSuffix}`;
+
+    if (document.getElementById(id)) {
+        return;
     }
-    const convertedName = codename.replace(' ', '-');
-    const exists = document.getElementById(`${convertedName}${gitHubButtonSuffix}`);
+
+    if (!navEl) {
+        return;
+    }
+
+    const list = navEl.querySelector('ul');
+    if (!list) {
+        return;
+    }
+
     const fullUrl = buildUrl(url);
-    if (!exists) {
-        nav[0].children[0].appendChild(generatorFunction(label, codename, fullUrl, shortcut, index));
-    }
+    list.appendChild(generatorFunction(label, codename, fullUrl, shortcut, index));
 }
 
-function addTabs()
-{
-    let nav = document.getElementsByClassName("js-repo-nav");
-    if (nav !== undefined) {
-        appendElement(nav, 'My branches', '/branches/yours', generateTab, undefined, 6, 'q m');
-        appendElement(nav, 'All branches', '/branches/all', generateTab, undefined, 7, 'q a');
-        appendElement(nav, 'Network', '/network', generateTab, undefined, 8, 'q n');
-        appendElement(nav, 'New issue', '/issues/new/choose', generateButton, undefined, 9, 'q c');
+function addTabs() {
+    let navEl = document.querySelector('.js-repo-nav');
+
+    if (!navEl) {
+        navEl = document.querySelector('nav[aria-label="Repository"]');
     }
+
+    if (!navEl) {
+        navEl = document.querySelector('#repository-container-header nav');
+    }
+
+    if (!navEl) return;
+
+    appendElement(navEl, 'My branches', '/branches/yours', generateTab, undefined, 6, 'q m');
+    appendElement(navEl, 'All branches', '/branches/all', generateTab, undefined, 7, 'q a');
+    appendElement(navEl, 'Network', '/network', generateTab, undefined, 8, 'q n');
+    appendElement(navEl, 'New issue', '/issues/new/choose', generateButton, undefined, 9, 'q c');
 }
 
-setInterval(addTabs, 1000);
+function addTopRightButtons() {
+    const icon = document.querySelector('.prc-Stack-Stack-UQ9k6 .octicon-git-pull-request');
+    const btn = icon.closest('.prc-Button-ButtonBase-9n-Xk');
+    if (!btn) return;
+    btn.outerHTML = `
+<span>
+    <div class="prc-ButtonGroup-ButtonGroup-vFUrY">
+        <div>
+            <a title="Created - Pull Requests" href="/pulls" data-component="IconButton" type="button" data-loading="false" data-no-visuals="true" data-size="medium" data-variant="invisible" aria-labelledby="_R_q3pb_" data-discover="true" class="prc-Button-ButtonBase-9n-Xk styles-module__appHeaderButton__axedQ prc-Button-IconButton-fyge7">
+                <svg aria-hidden="true" focusable="false" class="octicon octicon-git-pull-request" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" display="inline-block" overflow="visible" style="vertical-align:text-bottom">
+                    <path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"></path>
+                </svg>
+            </a>
+        </div>
+        <div>
+            <a title="Assigned - Pull Requests" href="/pulls/assigned" data-component="IconButton" type="button" class="prc-Button-ButtonBase-9n-Xk styles-module__appHeaderButton__axedQ prc-Button-IconButton-fyge7" data-loading="false" data-no-visuals="true" data-size="medium" data-variant="invisible" aria-labelledby="_R_q3pb_" data-discover="true">
+                A
+            </a>
+        </div>
+        <div>
+            <a title="Mentioned - Pull Requests" href="/pulls/mentioned" data-component="IconButton" type="button" class="prc-Button-ButtonBase-9n-Xk styles-module__appHeaderButton__axedQ prc-Button-IconButton-fyge7" data-loading="false" data-no-visuals="true" data-size="medium" data-variant="invisible" aria-labelledby="_R_q3pb_" data-discover="true">
+                M
+            </a>
+        </div>
+        <div>
+            <a title="Review Requested - Pull Requests" href="/pulls/review-requested" data-component="IconButton" type="button" class="prc-Button-ButtonBase-9n-Xk styles-module__appHeaderButton__axedQ prc-Button-IconButton-fyge7" data-loading="false" data-no-visuals="true" data-size="medium" data-variant="invisible" aria-labelledby="_R_q3pb_" data-discover="true">
+                R
+            </a>
+        </div>
+    </div>
+</span>
+    `;
+}
+
+function startObserver() {
+    const obs = new MutationObserver(() => {
+        addTabs();
+        addTopRightButtons();
+    });
+    obs.observe(document.documentElement, { childList: true, subtree: true });
+    addTabs();
+    addTopRightButtons();
+}
+
+startObserver();
