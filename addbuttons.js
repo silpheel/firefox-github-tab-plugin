@@ -95,11 +95,14 @@ function addTabs() {
 }
 
 function addTopRightButtons() {
+    const containerId = 'github-tab-plugin-top-right-buttons';
+    if (document.getElementById(containerId)) return;
+
     const icon = document.querySelector('.prc-Stack-Stack-UQ9k6 .octicon-git-pull-request');
-    const btn = icon.closest('.prc-Button-ButtonBase-9n-Xk');
+    const btn = icon ? icon.closest('.prc-Button-ButtonBase-9n-Xk') : null;
     if (!btn) return;
     btn.outerHTML = `
-<span>
+<span id="${containerId}">
     <div class="prc-ButtonGroup-ButtonGroup-vFUrY">
         <div>
             <a title="Created - Pull Requests" href="/pulls" data-component="IconButton" type="button" data-loading="false" data-no-visuals="true" data-size="medium" data-variant="invisible" aria-labelledby="_R_q3pb_" data-discover="true" class="prc-Button-ButtonBase-9n-Xk styles-module__appHeaderButton__axedQ prc-Button-IconButton-fyge7">
@@ -129,7 +132,10 @@ function addTopRightButtons() {
 }
 
 function startObserver() {
-    const obs = new MutationObserver(() => addTabs());
+    const obs = new MutationObserver(() => {
+        addTabs();
+        addTopRightButtons();
+    });
     obs.observe(document.documentElement, { childList: true, subtree: true });
     addTabs();
     addTopRightButtons();
